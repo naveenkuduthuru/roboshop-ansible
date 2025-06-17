@@ -1,3 +1,4 @@
+
 - name: mongodb
   hosts: mongodb
   become: yes
@@ -5,15 +6,12 @@
   - name: Copy mongodb repo
     ansible.builtin.copy:
       src: mongodb.repo
-      dest: /etc/yum.repos.d/mongodb-org.repo
-
-  - name: Install MongoDB package
-    ansible.builtin.package: 
-     name: mongodb-org
-     state: present
-     update_cache: yes
-
- 
+      dest: /etc/yum.repos.d/mongodb.repo
+  
+  - name: Install mongodb
+    ansible.builtin.package:
+      name: mongodb-org
+      state: present
 
   - name: start and enable mongodb
     ansible.builtin.service:
