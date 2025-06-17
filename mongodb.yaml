@@ -1,3 +1,4 @@
+
 - name: mongodb
   hosts: mongodb
   become: yes
