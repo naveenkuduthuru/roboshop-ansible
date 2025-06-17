@@ -4,8 +4,8 @@
   tasks:
   - name: instl epel
     ansible.builtin.dnf:
-    name: epel-release
-    state: present
+      name: epel-release
+      state: present
     
   - name: install remi release
     ansible.builtin.dnf: # check pacakge will work not
