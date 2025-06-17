@@ -6,14 +6,14 @@
     ansible.builtin.copy:
       src: mongodb.repo
       dest: /etc/yum.repos.d/mongodb-org.repo
-      
+
   - name: Install MongoDB package
     ansible.builtin.package: 
     name: mongodb-org
     state: present
     update_cache: yes
 
- \
+ 
 
   - name: start and enable mongodb
     ansible.builtin.service:
