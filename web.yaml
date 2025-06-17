@@ -1,40 +1,30 @@
-- name: install web component
-  hosts: web
+- name: mongodb
+  hosts: mongodb
   become: yes
   tasks:
-  - name: install nginx
-    ansible.builtin.dnf:
-      name: nginx 
-      state: present
-  
-  - name: remove html directory
-    ansible.builtin.file:
-      path: /usr/share/nginx/html
-      state: absent
-
-  - name: create html directory
-    ansible.builtin.file:
-      path: /usr/share/nginx/html
-      state: directory
-
-  - name: Download web app
-    ansible.builtin.get_url:
-      url: https://roboshop-builds.s3.amazonaws.com/web.zip
-      dest: /tmp
-
-  - name: Extract application
-    ansible.builtin.unarchive:
-      src: /tmp/web.zip
-      dest: /usr/share/nginx/html
-      remote_src: yes
-
-  - name: copy roboshop configuration
+  - name: Copy mongodb repo
     ansible.builtin.copy:
-      src: roboshop.conf
-      dest: /etc/nginx/default.d/roboshop.conf
+      src: mongodb.repo
+      dest: /etc/yum.repos.d/mongodb.repo
+  
+  - name: Install mongodb
+    ansible.builtin.package:
+      name: mongodb-org
+      state: present
 
-  - name: start and enable nginx
+  - name: start and enable mongodb
     ansible.builtin.service:
-      name: nginx
-      state: restarted
+      name: mongod
+      state: started
       enabled: yes
+
+  - name: allow remote conncections
+    ansible.builtin.replace:
+      path: /etc/mongod.conf
+      regexp: '127.0.0.1'
+      replace: '0.0.0.0'
+
+  - name: start and enable mongodb
+    ansible.builtin.service:
+      name: mongod
+      state: restarted
