@@ -9,9 +9,9 @@
 
   - name: Install MongoDB package
     ansible.builtin.package: 
-    name: mongodb-org
-    state: present
-    update_cache: yes
+     name: mongodb-org
+     state: present
+     update_cache: yes
 
  
 
