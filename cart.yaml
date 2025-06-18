@@ -1,59 +1,80 @@
-- name: configure cart component
-  hosts: cart
+- name: catalogue
+  hosts: catalogue
   become: yes
   tasks:
-  - name: disable default nodejs
-    ansible.builtin.command: dnf module disable nodejs -y
-
-  - name: enable nodejs:20
-    ansible.builtin.command: dnf module enable nodejs:20 -y
+  - name: disable old nodejs and enable nodejs
+    ansible.builtin.shell: dnf module disable nodejs -y ; dnf module enable nodejs:18 -y
 
   - name: Install nodejs
     ansible.builtin.dnf:
-      name: nodejs
+      name: nodejs 
       state: present
 
-  - name: create roboshop system user
+  - name: create roboshop user
     ansible.builtin.user:
       name: roboshop
-      shell: /sbin/nologin 
-      system: true
-      home: /app
-  
+
+  - name: Recursively remove app directory
+    ansible.builtin.file:
+      path: /app
+      state: absent
+
   - name: create app directory
     ansible.builtin.file:
       path: /app
       state: directory
 
-  - name: download cart code
+  - name: download catalogue application
     ansible.builtin.get_url:
-      url: https://roboshop-artifacts.s3.amazonaws.com/cart-v3.zip 
-      dest: /tmp/cart.zip
+      url: https://roboshop-builds.s3.amazonaws.com/catalogue.zip
+      dest: /tmp
 
-  # this module thinks file exist on ansible control server, needs to extract on to remote machine
-  # remote_src: yes means files already exist in cart server
-  - name: extract cart code
+  - name: extract catalogue application
     ansible.builtin.unarchive:
-      src: /tmp/cart.zip
+      src: /tmp/catalogue.zip
       dest: /app
       remote_src: yes
 
-  - name: install dependencies
-    community.general.npm:
-      path: /app
+  - name: Install dependencies
+    ansible.builtin.command: npm install
+    args:
+      chdir: /app
 
-  - name: copy cart service to system directory
+  - name: Copy catalogue service
     ansible.builtin.copy:
-      src: cart.service
-      dest: /etc/systemd/system/cart.service
+      src: catalogue.service
+      dest: /etc/systemd/system/catalogue.service
 
-  - name: systemctl deamon reload
+  - name: deamon realod and start
     ansible.builtin.systemd_service:
       daemon_reload: true
 
-  - name: start and enable cart
+  # let's start after the data is loaded
+
+  - name: Copy mongodb repo
+    ansible.builtin.copy:
+      src: mongodb.repo
+      dest: /etc/yum.repos.d/mongodb.repo
+
+  - name: Install mongodb client
+    ansible.builtin.package:
+      name: mongodb-org-shell
+      state: present
+
+  - name: get the categories count
+    ansible.builtin.command:  mongo --host mongodb.joindevops07.shop --quiet --eval 'db = db.getSiblingDB("catalogue"); db.products.count()'
+    register: product_count
+
+  # - name: print the count
+  #   ansible.builtin.debug:
+  #     msg: "product count: {{product_count}}"
+
+  - name: load catalogue data
+    ansible.builtin.command: mongo --host mongodb.joindevops07.shop < /app/schema/catalogue.js
+    when: product_count.stdout == "0" # keep double quotes
+
+  - name: start and enable catalogue
     ansible.builtin.service:
-      name: cart
-      state: started
+      name: catalogue
+      state: restarted
       enabled: yes
-  
