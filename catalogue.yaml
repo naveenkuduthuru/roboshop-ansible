@@ -64,11 +64,11 @@
 
   - name: install mongodb client
     ansible.builtin.dnf:
-      name: mongodb-mongosh
+      name: mongo-mongodb
       state: present
 
   - name: check products loaded or not
-    ansible.builtin.command: mongosh --host mongodb.joindevops07.shop --eval 'db.getMongo().getDBNames().indexOf("catalogue")'
+    ansible.builtin.command: mongodb --host mongodb.joindevops07.shop --eval 'db.getMongo().getDBNames().indexOf("catalogue")'
     register: catalogue_output
 
   - name: print catalogue output
