@@ -64,7 +64,7 @@
 
   - name: install mongodb client
     ansible.builtin.dnf:
-      name: mongo.repo
+      name: mongodb-mongosh
       state: present
 
   - name: check products loaded or not
